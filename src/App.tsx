@@ -1,6 +1,7 @@
 // App.tsx
 import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
+import ConnectMenu from "./components/ConnectMenu";
 
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
       </h1>
 
     
-
+    <ConnectMenu />
      
     </div>
   );
