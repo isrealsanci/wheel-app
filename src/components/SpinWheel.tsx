@@ -117,11 +117,13 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     if (!address || nftBalance === undefined) return;
 
     const syncSpins = async () => {
-      const count = await fetchUsedSpins();
-      setUsedSpins(count);
-      const maxSpins = Number(nftBalance || 0) * 20;
-      setSpinsLeft(Math.max(maxSpins - count, 0));
-    };
+  const count = await fetchUsedSpins();
+  setUsedSpins(count);
+  const nftCount = Number(nftBalance || 0);
+  const maxSpins = nftCount > 0 ? nftCount * 20 : 2;
+  setSpinsLeft(Math.max(maxSpins - count, 0));
+};
+
 
     syncSpins();
   }, [address, nftBalance]);
@@ -129,9 +131,10 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   useEffect(() => {
     if (isConfirmed) {
       updateUsedSpins(-5); // reduce purchased spin "debt"
-      const maxSpins = Number(nftBalance || 0) * 20;
-      setSpinsLeft(Math.max(maxSpins - (usedSpins - 5), 0));
-      setShowBuySpinModal(false);
+  const nftCount = Number(nftBalance || 0);
+  const maxSpins = nftCount > 0 ? nftCount * 20 : 2;
+  setSpinsLeft(Math.max(maxSpins - (usedSpins - 5), 0));
+  setShowBuySpinModal(false);
     }
   }, [isConfirmed]);
 
