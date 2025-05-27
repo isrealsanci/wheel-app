@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { sdk } from "@farcaster/frame-sdk";
-import {
-  useAccount,
-  useSendTransaction,
-  useWaitForTransactionReceipt,
-  useReadContract,
-} from "wagmi";
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseEther } from "viem";
+import { supabase } from "../lib/supabaseClient";
 
 const NFT_CONTRACT_ADDRESS = "0xDed766dB5140DE5d36D38500035e470EB28D7fC7";
 const NFT_ABI = [
@@ -19,7 +15,6 @@ const NFT_ABI = [
     type: "function",
   },
 ];
-
 const DONATE_ADDRESS = "0x893E76AB37Be1b3e26732fE9cede1f0015599B47";
 
 const data = [
@@ -82,50 +77,63 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [spinsLeft, setSpinsLeft] = useState(0);
+  const [usedSpins, setUsedSpins] = useState(0);
   const [showWinModal, setShowWinModal] = useState(false);
   const [winData, setWinData] = useState<{ amount: number; label: string; txHash?: string } | null>(null);
   const [showBuySpinModal, setShowBuySpinModal] = useState(false);
 
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const localKey = `spin-data-${address}`;
-    const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
-    const nftCount = Number(nftBalance || 0);
-    const maxSpins = nftCount * 20;
+  const fetchUsedSpins = async () => {
+    const { data, error } = await supabase
+      .from("spins")
+      .select("used_spins")
+      .eq("wallet", address.toLowerCase())
+      .single();
 
-    if (localData.date !== today) {
-      localStorage.setItem(localKey, JSON.stringify({ date: today, count: 0 }));
-      setSpinsLeft(maxSpins);
+    if (error && error.code !== "PGRST116") console.error(error);
+    return data?.used_spins ?? 0;
+  };
+
+  const updateUsedSpins = async (delta: number) => {
+    const { data: existing } = await supabase
+      .from("spins")
+      .select("used_spins")
+      .eq("wallet", address.toLowerCase())
+      .single();
+
+    if (existing) {
+      await supabase
+        .from("spins")
+        .update({ used_spins: existing.used_spins + delta })
+        .eq("wallet", address.toLowerCase());
     } else {
-      const count = localData.count || 0;
-      setSpinsLeft(Math.max(maxSpins - count, 0));
+      await supabase
+        .from("spins")
+        .insert({ wallet: address.toLowerCase(), used_spins: delta });
     }
+    setUsedSpins((prev) => prev + delta);
+  };
+
+  useEffect(() => {
+    if (!address || nftBalance === undefined) return;
+
+    const syncSpins = async () => {
+      const count = await fetchUsedSpins();
+      setUsedSpins(count);
+      const maxSpins = Number(nftBalance || 0) * 20;
+      setSpinsLeft(Math.max(maxSpins - count, 0));
+    };
+
+    syncSpins();
   }, [address, nftBalance]);
 
   useEffect(() => {
     if (isConfirmed) {
-      const today = new Date().toISOString().split("T")[0];
-      const localKey = `spin-data-${address}`;
-      const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
-      const newCount = (localData.count || 0) - 5;
-      localStorage.setItem(localKey, JSON.stringify({ date: today, count: newCount }));
-      const nftCount = Number(nftBalance || 0);
-      const maxSpins = nftCount * 20;
-      setSpinsLeft(Math.max(maxSpins - newCount, 0));
+      updateUsedSpins(-5); // reduce purchased spin "debt"
+      const maxSpins = Number(nftBalance || 0) * 20;
+      setSpinsLeft(Math.max(maxSpins - (usedSpins - 5), 0));
       setShowBuySpinModal(false);
     }
-  }, [isConfirmed, address, nftBalance]);
-
-  const updateSpinCount = () => {
-    const today = new Date().toISOString().split("T")[0];
-    const localKey = `spin-data-${address}`;
-    const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
-    const count = (localData.count || 0) + 1;
-    localStorage.setItem(localKey, JSON.stringify({ date: today, count }));
-    const nftCount = Number(nftBalance || 0);
-    const maxSpins = nftCount * 20;
-    setSpinsLeft(Math.max(maxSpins - count, 0));
-  };
+  }, [isConfirmed]);
 
   const handleSpinClick = () => {
     if (mustSpin || spinsLeft <= 0) return;
@@ -134,14 +142,14 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     setMustSpin(true);
   };
 
-  const handleBuySpin = async () => {
+  const handleBuySpin = () => {
     if (!isConnected) return;
     sendTransaction({ to: DONATE_ADDRESS, value: parseEther("0.00004") });
   };
 
   const handleStopSpinning = async () => {
     const prize = prizes[prizeIndex];
-    updateSpinCount();
+    await updateUsedSpins(1);
     setMustSpin(false);
 
     if (prize.amount > 0) {
@@ -177,7 +185,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     }
   };
 
-
+  
   return (
     <div className="flex flex-col items-center gap-4 p-6 rounded-xl shadow-lg max-w-xl mx-auto">
       <Wheel
