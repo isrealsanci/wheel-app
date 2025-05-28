@@ -31,7 +31,7 @@ function App() {
         <p>
           🚫 This app can only be accessed from the Farcaster Mini App.
           <br />
-          Please open it within Farcaster.
+          Please open it within Farcaster. if you open in farcaster refresh the app at the three dots on the top right
         </p>
       </div>
     );
