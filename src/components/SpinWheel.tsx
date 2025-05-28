@@ -36,6 +36,13 @@ const data = [
   { option: "Thanks" },
 ];
 
+const segmentColors = data.map((item) => {
+  if (item.option.includes("ETH")) return "#2563eb"; // biru untuk ETH
+  if (item.option.includes("CELO")) return "#facc15"; // kuning untuk CELO
+  if (item.option === "Thanks") return "#9ca3af"; // abu-abu
+  return "#d1d5db"; // default fallback
+});
+
 const prizes = [
   { label: "$0.01 ETH", amount: 0.000005, chain: "base", token: "ETH" },
   { label: "$0.05 ETH", amount: 0.00002, chain: "base", token: "ETH" },
@@ -196,7 +203,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
         prizeNumber={prizeIndex}
         data={data}
         onStopSpinning={handleStopSpinning}
-        backgroundColors={["#a855f7", "#2563eb"]}
+        backgroundColors={segmentColors}
         textColors={["#ffffff"]}
         outerBorderColor="#000"
         outerBorderWidth={4}
