@@ -179,8 +179,8 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
     if (!winData) return;
     try {
       await sdk.actions.composeCast({
-        text: `I just won ${winData.label} on Spin Wheel!`,
-        embeds: ["https://wheel.exapp.xyz"],
+        text: `I just won ${winData.label} on Spin Wheel! Try your luck here and win big prizes`,
+        embeds: ["https://spin.exapp.xyz"],
       });
     } catch (error) {
       console.error("Error sharing cast:", error);
