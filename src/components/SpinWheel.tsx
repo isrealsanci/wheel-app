@@ -196,8 +196,8 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
         prizeNumber={prizeIndex}
         data={data}
         onStopSpinning={handleStopSpinning}
-        backgroundColors={["#facc15", "#2563eb"]}
-        textColors={["#00000"]}
+        backgroundColors={["#facc15", "#2563eb", "#065f46"]}
+        textColors={["#000000"]}
         outerBorderColor="#000"
         outerBorderWidth={4}
         radiusLineColor="#fff"
