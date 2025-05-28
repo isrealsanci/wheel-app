@@ -1,10 +1,11 @@
 // App.tsx
+import { sdk } from "@farcaster/frame-sdk";
 import { useEffect } from "react";
 import ConnectMenu from "./components/ConnectMenu";
 
 function App() {
   useEffect(() => {
-    // Any other initialization logic can go here if needed
+    sdk.actions.ready();
   }, []);
 
   return (
