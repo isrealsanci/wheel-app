@@ -112,7 +112,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
       const today = new Date().toISOString().split("T")[0];
       const localKey = `spin-data-${address}`;
       const localData = JSON.parse(localStorage.getItem(localKey) || "{}");
-      const newCount = (localData.count || 0) - 5;
+      const newCount = (localData.count || 0) - 500;
       localStorage.setItem(
         localKey,
         JSON.stringify({ date: today, count: newCount })
@@ -144,7 +144,7 @@ export default function SpinWheel({ address, onSpinSuccess }: SpinWheelProps) {
 
   const handleBuySpin = async () => {
     if (!isConnected) return;
-    sendTransaction({ to: DONATE_ADDRESS, value: parseEther("0.00004") });
+    sendTransaction({ to: DONATE_ADDRESS, value: parseEther("0.004") });
   };
 
   const handleStopSpinning = async () => {
